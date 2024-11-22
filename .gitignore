@@ -34,4 +34,3 @@ build/
 
 ##My Variables##
 .env
-.env.properties
