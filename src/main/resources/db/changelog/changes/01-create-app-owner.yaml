@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: 01-create-app-owner
+      author: Bartosz Wójcik
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: username
+                  value: Owner
+              - column:
+                  name: first_name
+                  value: Jan
+              - column:
+                  name: last_name
+                  value: Kowalski
+              - column:
+                  name: email
+                  value: admin@admin.com
+              - column:
+                  name: password
+                  value: $2a$10$2qQ/GtEzyQSUAJkPUmpdCeYcnvvqGzF8QofspSGurGnXcaFYFCiOq
+        - insert:
+            tableName: users_roles
+            columns:
+              - column:
+                  name: user_id
+                  value: 1
+
+              - column:
+                  name: role_id
+                  value: 1
