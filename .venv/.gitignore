@@ -1,0 +1,9 @@
+# Wyklucz wirtualne środowisko
+venv/
+
+# Wyklucz cache Pythona
+__pycache__/
+*.pyc
+
+# Wyklucz pliki konfiguracyjne IDE
+.idea/
