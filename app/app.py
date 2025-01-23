@@ -1,13 +1,10 @@
-from flask import Flask, jsonify
-
-from data import upcoming_matches
-
+from flask import Flask
 
 app = Flask(__name__)
 
-@app.route('/api/upcoming-matches', methods=['GET'])
-def get_upcoming_matches():
-    return jsonify(upcoming_matches)
+@app.route('/')
+def home():
+    return {'message': 'Welcome to Render API!'}
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    app.run()
