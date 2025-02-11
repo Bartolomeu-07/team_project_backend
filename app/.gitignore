@@ -1,6 +1,0 @@
-# Wyklucz folder .venv
-.venv/
-
-# Wyklucz cache Pythona
-__pycache__/
-*.pyc
