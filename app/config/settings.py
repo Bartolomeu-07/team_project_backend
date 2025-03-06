@@ -38,9 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    'django_crontab',
     'rest_framework',
-    'api',
+    'drf_yasg',
+    'api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
@@ -53,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
 
 ROOT_URLCONF = 'config.urls'
 
@@ -129,9 +131,6 @@ USE_TZ = True
 STATIC_URL = '/static/'  # URL dla plików statycznych
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Katalog dla Render
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),  # Jeśli masz dodatkowe pliki statyczne
-]
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

@@ -1,17 +1,38 @@
 from django.db import models
+from django.utils.timezone import now
+
+
+class Country(models.Model):
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=6, unique=True, primary_key=True)
+    flag = models.URLField(max_length=200, null=True, blank=True)
+
+class Competition(models.Model):
+    competition_id = models.IntegerField(unique=True, primary_key=True)
+    name = models.CharField(max_length=100)
+    country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
+    logo = models.URLField(max_length=500, default='')
+
+
+class Team(models.Model):
+    team_id = models.IntegerField(unique=True, primary_key=True)
+    code = models.CharField(max_length=6, null=True, blank=True)
+    name = models.CharField(max_length=100)
+    league = models.ForeignKey(Competition, on_delete=models.SET_NULL, null=True, blank=True)
+    country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
+    logo = models.URLField(max_length=500, default='')
+
 
 class Match(models.Model):
-    home_team = models.CharField(max_length=100)
-    away_team = models.CharField(max_length=100)
-    home_score = models.IntegerField
-    away_score = models.IntegerField
-    date_and_time = models.DateTimeField
-
-    def __str__(self):
-        return {
-                'home_team': self.home_team,
-                'away_team': self.away_team,
-                'home_score': self.home_score,
-                'away_score': self.away_score,
-                'date_time': self.date_and_time
-                }
+    match_id = models.IntegerField(unique=True, primary_key=True)
+    competition = models.ForeignKey(Competition, on_delete=models.CASCADE, null=True, blank=True)
+    home_team = models.ForeignKey(Team, on_delete=models.CASCADE, to_field='team_id', related_name='home_matches')
+    away_team = models.ForeignKey(Team, on_delete=models.CASCADE, to_field='team_id', related_name='away_matches')
+    home_team_last_five_results = models.CharField(max_length=5, null=True, blank=True)
+    away_team_last_five_results = models.CharField(max_length=5, null=True, blank=True)
+    home_score = models.IntegerField(null=True, blank=True)
+    away_score = models.IntegerField(null=True, blank=True)
+    home_wins_probability = models.FloatField(null=True, blank=True)
+    away_wins_probability = models.FloatField(null=True, blank=True)
+    date_and_time = models.DateTimeField(default=now)
+    status = models.CharField(max_length=10, default='')
