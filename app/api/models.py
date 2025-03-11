@@ -36,3 +36,9 @@ class Match(models.Model):
     away_wins_probability = models.FloatField(null=True, blank=True)
     date_and_time = models.DateTimeField(default=now)
     status = models.CharField(max_length=10, default='')
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['away_team', 'home_team']),
+            models.Index(fields=['competition']),
+        ]

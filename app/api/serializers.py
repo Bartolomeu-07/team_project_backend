@@ -29,6 +29,12 @@ class MatchSerializer(serializers.ModelSerializer):
         }
 
 
+class TeamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+        fields = '__all__'
+
+
 class CompetitionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Competition
@@ -38,10 +44,4 @@ class CompetitionSerializer(serializers.ModelSerializer):
 class CountrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Country
-        fields = '__all__'
-
-
-class TeamSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Team
         fields = '__all__'

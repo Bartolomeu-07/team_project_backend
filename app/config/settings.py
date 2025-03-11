@@ -134,3 +134,12 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Katalog dla Render
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# SWAGGER
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'SHOW_REQUEST_HEADERS': True,
+    'DEFAULT_MODEL_RENDERING': 'example',
+    'REFETCH_SCHEMA_WITH_QUERY': True,
+}
+
