@@ -2,7 +2,15 @@ from rest_framework import serializers
 from .models import Match, Competition, Country, Team
 
 
+class CompetitionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Competition
+        fields = '__all__'
+
+
 class MatchSerializer(serializers.ModelSerializer):
+    competition = CompetitionSerializer(read_only=True)
+
     class Meta:
         model = Match
         fields = '__all__'
@@ -11,6 +19,7 @@ class MatchSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         return {
             "competition": instance.competition.name if instance.competition else None,
+            "country": instance.competition.country.name if instance.competition and instance.competition.country else None,
             "match_info": {
                 "match_id": instance.match_id,
                 "home_team": instance.home_team.name,
@@ -32,12 +41,6 @@ class MatchSerializer(serializers.ModelSerializer):
 class TeamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Team
-        fields = '__all__'
-
-
-class CompetitionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Competition
         fields = '__all__'
 
 
