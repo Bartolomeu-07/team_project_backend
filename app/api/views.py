@@ -27,7 +27,9 @@ class MatchViewSet(viewsets.ReadOnlyModelViewSet):
             openapi.Parameter('country_name', openapi.IN_QUERY, description="Filter by country name",
                               type=openapi.TYPE_STRING),
             openapi.Parameter('country_id', openapi.IN_QUERY, description="Filter by country ID",
-                              type=openapi.TYPE_INTEGER),
+                              type=openapi.TYPE_STRING),
+            openapi.Parameter('date', openapi.IN_QUERY, description="Filter by date (DD.MM.YYYY)",
+                              type=openapi.TYPE_STRING),
         ]
     )
 
@@ -53,6 +55,7 @@ class MatchViewSet(viewsets.ReadOnlyModelViewSet):
         team = self.request.query_params.get('team')
         country_name = self.request.query_params.get('country_name')
         country_id = self.request.query_params.get('country_id')
+        date = self.request.query_params.get('date')
 
         if competition:
             queryset = queryset.filter(competition_id=competition)
@@ -62,6 +65,13 @@ class MatchViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(competition__country__name=country_name)
         elif country_id:
             queryset = queryset.filter(competition__country_id=country_id)
+        if date:
+            year = date[6:10]
+            month = date[3:5]
+            day = date[:2]
+            queryset = queryset.filter(Q(date_and_time__year=year)
+                                       & Q(date_and_time__month=month)
+                                       & Q(date_and_time__day=day))
 
         return queryset
 
