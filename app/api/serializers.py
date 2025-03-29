@@ -19,7 +19,9 @@ class MatchSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         return {
             "competition": instance.competition.name if instance.competition else None,
+            "competition_logo": instance.competition.logo if instance.competition else None,
             "country": instance.competition.country.name if instance.competition and instance.competition.country else None,
+            "country_flag": instance.competition.country.flag if instance.competition and instance.competition.country else None,
             "match_info": {
                 "match_id": instance.match_id,
                 "home_team": instance.home_team.name,

@@ -50,7 +50,8 @@ def fetch_and_create_competitions():
                 else:
                     country = None
                 name = competition_data.get('name')
-                new_competitions.append(Competition(competition_id=competition_id, name=name, country=country))
+                logo = competition_data.get('logo')
+                new_competitions.append(Competition(competition_id=competition_id, name=name, logo=logo, country=country))
         if new_competitions:
             Competition.objects.bulk_create(new_competitions)
             print(f"{len(new_competitions)} new competitions created.")
