@@ -1,10 +1,13 @@
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
-from django.db.models import Q, F
+from django.db.models import Q
+from django.db.models.functions import Greatest
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from itertools import groupby
+
+from rest_framework.viewsets import ViewSet
 
 from .models import Match, Competition, Country, Team
 from .serializers import (MatchSerializer,
@@ -100,6 +103,26 @@ class CountryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
     permission_classes = [AllowAny]
+
+
+class RecommendedViewSet(ViewSet):
+
+    def list(self, request, *args, **kwargs):
+        top_five_matches = Match.objects.annotate(
+            max_probability=Greatest('home_wins_probability', 'away_wins_probability')
+            ).order_by('-max_probability')[:5]
+
+        response_data = []
+        for match in top_five_matches:
+            bet = 'home' if match.home_wins_probability >= match.away_wins_probability else 'away'
+            serialized_match = MatchSerializer(match).data
+
+            response_data.append({
+                'match': serialized_match,
+                'bet': bet,
+            })
+
+        return Response(response_data)
 
 
 # ADMIN VIEWSETS
