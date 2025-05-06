@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.timezone import now
-
+from django.core.exceptions import ValidationError
 
 class Country(models.Model):
     name = models.CharField(max_length=100)
@@ -42,3 +42,40 @@ class Match(models.Model):
             models.Index(fields=['away_team', 'home_team']),
             models.Index(fields=['competition']),
         ]
+
+
+class MatchPrediction(models.Model):
+    PREDICTION_TYPE_CHOICES = [
+        ('winner', 'Who will win'),
+        ('both_score', 'Will both teams score'),
+        ('first_score', 'Who will score first'),
+        ('draw', 'Will there be a draw'),
+    ]
+    ANSWER_CHOICES = [
+        ('1', 'Home'),
+        ('2', 'Away'),
+        ('yes', 'Yes'),
+        ('no', 'No'),
+        ('without_heads', 'Without heads'),
+    ]
+
+    match = models.ForeignKey(Match, on_delete=models.CASCADE)
+    prediction_type = models.CharField(max_length=20, choices=PREDICTION_TYPE_CHOICES)
+    answer = models.CharField(max_length=20, choices=ANSWER_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def clean(self):
+        # Logical validation for answer depending on prediction type
+        if self.prediction_type == 'winner' and self.answer not in ['1', '2']:
+            raise ValidationError("Answer for 'winner' must be '1' (Home) or '2' (Away).")
+        if self.prediction_type == 'both_score' and self.answer not in ['yes', 'no']:
+            raise ValidationError("Answer for 'both_score' must be 'yes' or 'no'.")
+        if self.prediction_type == 'draw' and self.answer not in ['yes', 'no']:
+            raise ValidationError("Answer for 'draw' must be 'yes' or 'no'.")
+        if self.prediction_type == 'first_score' and self.answer not in ['1', '2', 'without_heads']:
+            raise ValidationError("Answer for 'first_score' must be '1', '2' or 'without_heads'.")
+
+    def save(self, *args, **kwargs):
+        # Ensure validation is performed before saving
+        self.full_clean()
+        super().save(*args, **kwargs)
