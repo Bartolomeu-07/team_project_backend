@@ -125,6 +125,21 @@ class RecommendedViewSet(ViewSet):
         return Response(response_data)
 
 
+class SearchViewSet(ViewSet):
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('query', openapi.IN_QUERY, description="Search by string",
+                              type=openapi.TYPE_STRING)])
+
+    def list(self, request, *args, **kwargs):
+        query = request.query_params.get('query', '')
+
+        teams = Team.objects.filter(name__icontains=query).order_by('name')
+        serialized = TeamSerializer(teams, many=True)
+
+        return Response(serialized.data)
+
 # ADMIN VIEWSETS
 # class AdminMatchViewSet(viewsets.ModelViewSet):
 #     queryset = Match.objects.all()
