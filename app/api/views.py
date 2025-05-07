@@ -1,13 +1,17 @@
 from rest_framework import viewsets, status
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
+
 from rest_framework.decorators import action
 from django.db.models import Q, F, Count
+from django.db.models import Q
+from django.db.models.functions import Greatest
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from itertools import groupby
-
 from .models import Match, Competition, Country, Team, MatchPrediction
+from rest_framework.viewsets import ViewSet
+from .models import Match, Competition, Country, Team
 from .serializers import (MatchSerializer,
                           CompetitionSerializer,
                           CountrySerializer,
@@ -103,6 +107,41 @@ class CountryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CountrySerializer
     permission_classes = [AllowAny]
 
+
+class RecommendedViewSet(ViewSet):
+
+    def list(self, request, *args, **kwargs):
+        top_five_matches = Match.objects.annotate(
+            max_probability=Greatest('home_wins_probability', 'away_wins_probability')
+            ).order_by('-max_probability')[:5]
+
+        response_data = []
+        for match in top_five_matches:
+            bet = 'home' if match.home_wins_probability >= match.away_wins_probability else 'away'
+            serialized_match = MatchSerializer(match).data
+
+            response_data.append({
+                'match': serialized_match,
+                'bet': bet,
+            })
+
+        return Response(response_data)
+
+
+class SearchViewSet(ViewSet):
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('query', openapi.IN_QUERY, description="Search by string",
+                              type=openapi.TYPE_STRING)])
+
+    def list(self, request, *args, **kwargs):
+        query = request.query_params.get('query', '')
+
+        teams = Team.objects.filter(name__icontains=query).order_by('name')
+        serialized = TeamSerializer(teams, many=True)
+
+        return Response(serialized.data)
 
 # ADMIN VIEWSETS
 # class AdminMatchViewSet(viewsets.ModelViewSet):
