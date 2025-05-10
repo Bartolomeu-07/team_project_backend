@@ -82,8 +82,23 @@ class MatchViewSet(viewsets.ReadOnlyModelViewSet):
 class TeamViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TeamSerializer
     permission_classes = [AllowAny]
-    queryset = Team.objects.all()
 
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('id', openapi.IN_QUERY, description="Filter by team ID",
+                              type=openapi.TYPE_INTEGER)])
+
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        queryset = Team.objects.all()
+        id = self.request.query_params.get('id')
+
+        if id:
+            queryset = queryset.filter(team_id=id)
+
+        return queryset
 
 class LeagueViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CompetitionSerializer
