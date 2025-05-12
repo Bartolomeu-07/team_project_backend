@@ -22,6 +22,13 @@ class Team(models.Model):
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
     logo = models.URLField(max_length=500, default='')
 
+    @property
+    def last_five_matches(self):
+        return Match.objects.filter(
+            models.Q(home_team=self) | models.Q(away_team=self),
+            status='Match Finished',
+        ).order_by('-date_and_time')[:5]
+
 
 class Match(models.Model):
     match_id = models.IntegerField(unique=True, primary_key=True)

@@ -6,7 +6,7 @@ from django.db.models.functions import Greatest
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from itertools import groupby
-
+from collections import defaultdict
 from rest_framework.viewsets import ViewSet
 
 from .models import Match, Competition, Country, Team
@@ -105,13 +105,27 @@ class LeagueViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        queryset = Competition.objects.all()
+        queryset = Competition.objects.select_related('country').all()
         country = self.request.query_params.get('country')
-
         if country:
             queryset = queryset.filter(country_id=country)
-
         return queryset
+
+    def list(self, request, *args, **kwargs):
+        country_param = request.query_params.get('country')
+        queryset = self.get_queryset()
+
+        if country_param:
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+
+        grouped = defaultdict(list)
+        for competition in queryset:
+            country_name = competition.country.name if competition.country else "Unknown"
+            serialized = self.get_serializer(competition).data
+            grouped[country_name].append(serialized)
+
+        return Response(grouped)
 
 
 class CountryViewSet(viewsets.ReadOnlyModelViewSet):
