@@ -40,10 +40,34 @@ class MatchSerializer(serializers.ModelSerializer):
         }
 
 
+class MatchMiniSerializer(serializers.ModelSerializer):
+    home_team_logo = serializers.CharField(source='home_team.logo')
+    away_team_logo = serializers.CharField(source='away_team.logo')
+    home_team = serializers.CharField(source='home_team.name')
+    away_team = serializers.CharField(source='away_team.name')
+
+    class Meta(MatchSerializer.Meta):
+        fields = [
+            'home_team',
+            'home_team_logo',
+            'home_score',
+            'away_team',
+            'away_team_logo',
+            'away_score',
+            'date_and_time',
+        ]
+
+
 class TeamSerializer(serializers.ModelSerializer):
+    last_five_matches = serializers.SerializerMethodField()
+
     class Meta:
         model = Team
         fields = '__all__'
+
+    def get_last_five_matches(self, obj):
+        matches = obj.last_five_matches
+        return MatchMiniSerializer(matches, many=True).data
 
 
 class CountrySerializer(serializers.ModelSerializer):

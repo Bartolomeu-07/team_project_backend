@@ -10,6 +10,8 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from itertools import groupby
 from .models import Match, Competition, Country, Team, MatchPrediction
+from collections import defaultdict
+
 from rest_framework.viewsets import ViewSet
 from .models import Match, Competition, Country, Team
 from .serializers import (MatchSerializer,
@@ -85,21 +87,50 @@ class MatchViewSet(viewsets.ReadOnlyModelViewSet):
 class TeamViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TeamSerializer
     permission_classes = [AllowAny]
-    queryset = Team.objects.all()
 
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('id', openapi.IN_QUERY, description="Filter by team ID",
+                              type=openapi.TYPE_INTEGER)])
+
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        queryset = Team.objects.all()
+        id = self.request.query_params.get('id')
+
+        if id:
+            queryset = queryset.filter(team_id=id)
+
+        return queryset
 
 class LeagueViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CompetitionSerializer
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        queryset = Competition.objects.all()
+        queryset = Competition.objects.select_related('country').all()
         country = self.request.query_params.get('country')
-
         if country:
             queryset = queryset.filter(country_id=country)
-
         return queryset
+
+    def list(self, request, *args, **kwargs):
+        country_param = request.query_params.get('country')
+        queryset = self.get_queryset()
+
+        if country_param:
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+
+        grouped = defaultdict(list)
+        for competition in queryset:
+            country_name = competition.country.name if competition.country else "Unknown"
+            serialized = self.get_serializer(competition).data
+            grouped[country_name].append(serialized)
+
+        return Response(grouped)
 
 
 class CountryViewSet(viewsets.ReadOnlyModelViewSet):
