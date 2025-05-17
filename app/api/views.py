@@ -114,16 +114,23 @@ class LeagueViewSet(viewsets.ReadOnlyModelViewSet):
     def list(self, request, *args, **kwargs):
         country_param = request.query_params.get('country')
         queryset = self.get_queryset()
+        grouped = defaultdict(lambda: {"country_flag": None, "leagues": []})
 
         if country_param:
             serializer = self.get_serializer(queryset, many=True)
             return Response(serializer.data)
 
-        grouped = defaultdict(list)
         for competition in queryset:
-            country_name = competition.country.name if competition.country else "Unknown"
+            country = competition.country
+            country_name = country.name if country else "Other"
+            country_flag = country.flag if (country
+                and hasattr(country, 'flag')) else \
+                "https://cdn.pixabay.com/photo/2016/06/14/20/38/planet-earth-1457453_960_720.png"
+
             serialized = self.get_serializer(competition).data
-            grouped[country_name].append(serialized)
+
+            grouped[country_name]["country_flag"] = country_flag
+            grouped[country_name]["leagues"].append(serialized)
 
         return Response(grouped)
 
