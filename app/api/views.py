@@ -1,19 +1,19 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
-from django.db.models import Q
+from rest_framework.decorators import action
+from django.db.models import Q, Count
 from django.db.models.functions import Greatest
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from itertools import groupby
 from collections import defaultdict
 from rest_framework.viewsets import ViewSet
-
-from .models import Match, Competition, Country, Team
+from .models import Match, Competition, Country, Team, MatchPrediction
 from .serializers import (MatchSerializer,
                           CompetitionSerializer,
                           CountrySerializer,
-                          TeamSerializer)
+                          TeamSerializer, MatchPredictionSerializer)
 
 
 # USER VIEWSETS

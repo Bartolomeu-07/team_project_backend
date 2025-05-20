@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Match, Competition, Country, Team
+from .models import Match, Competition, Country, Team, MatchPrediction
 
 
 class CompetitionSerializer(serializers.ModelSerializer):
