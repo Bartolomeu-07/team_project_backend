@@ -176,6 +176,55 @@ class SearchViewSet(ViewSet):
 
         return Response(serialized.data)
 
+
+class MatchPredictionViewSet(viewsets.ModelViewSet):
+    serializer_class = MatchPredictionSerializer
+    queryset = MatchPrediction.objects.all()
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        match = serializer.validated_data['match']
+        prediction_type = serializer.validated_data['prediction_type']
+
+        stats = MatchPrediction.objects.filter(match=match, prediction_type=prediction_type)\
+            .values('answer')\
+            .annotate(count=Count('answer'))
+
+        total = sum(item['count'] for item in stats)
+        result = {item['answer']: round(item['count'] / total, 2) for item in stats}
+
+        return Response({
+            "success": True,
+            "stats": result,
+            "total_votes": total
+        }, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=["get"])
+    def stats(self, request):
+        match_id = request.query_params.get('match_id')
+        prediction_type = request.query_params.get('prediction_type')
+
+        if not match_id or not prediction_type:
+            return Response({"error": "match_id and prediction_type are required"}, status=400)
+
+        predictions = MatchPrediction.objects.filter(
+            match_id=match_id, prediction_type=prediction_type
+        ).values('answer').annotate(count=Count('answer'))
+
+        total = sum(p['count'] for p in predictions)
+        stats = {p['answer']: round(p['count'] / total, 2) for p in predictions} if total else {}
+
+        return Response({
+            "match_id": match_id,
+            "prediction_type": prediction_type,
+            "stats": stats,
+            "total_votes": total
+        })
+
 # ADMIN VIEWSETS
 # class AdminMatchViewSet(viewsets.ModelViewSet):
 #     queryset = Match.objects.all()
