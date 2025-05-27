@@ -14,12 +14,24 @@ class Competition(models.Model):
     logo = models.URLField(max_length=500, default='')
 
 
+class Stadium(models.Model):
+    stadium_id = models.IntegerField(unique=True, primary_key=True)
+    name = models.CharField(max_length=100)
+    address = models.CharField(max_length=100, null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    capacity = models.IntegerField(null=True, blank=True)
+    surface = models.CharField(max_length=100, null=True, blank=True)
+    image = models.URLField(max_length=500, default='')
+
+
 class Team(models.Model):
     team_id = models.IntegerField(unique=True, primary_key=True)
     code = models.CharField(max_length=6, null=True, blank=True)
     name = models.CharField(max_length=100)
     league = models.ForeignKey(Competition, on_delete=models.SET_NULL, null=True, blank=True)
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
+    stadium = models.ForeignKey(Stadium, on_delete=models.SET_NULL, null=True, blank=True)
+    founded = models.IntegerField(null=True, blank=True)
     logo = models.URLField(max_length=500, default='')
 
     @property

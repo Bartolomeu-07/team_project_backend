@@ -4,9 +4,10 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
-from .views import (MatchViewSet,LeagueViewSet,
+from .views import (MatchViewSet, LeagueViewSet,
                     CountryViewSet, TeamViewSet,
-                    RecommendedViewSet, SearchViewSet)
+                    RecommendedViewSet, SearchViewSet,
+                    StadiumViewSet)
 
 # API ROUTER
 api_router = DefaultRouter()
@@ -14,6 +15,7 @@ api_router.register(r'matches', MatchViewSet, basename='matches')
 api_router.register(r'competitions', LeagueViewSet, basename='competitions')
 api_router.register(r'countries', CountryViewSet, basename='countries')
 api_router.register(r'teams', TeamViewSet, basename='teams')
+api_router.register(r'stadiums', StadiumViewSet, basename='stadiums')
 api_router.register(r'recommended', RecommendedViewSet, basename='recommended matches')
 api_router.register(r'search', SearchViewSet, basename='search')
 

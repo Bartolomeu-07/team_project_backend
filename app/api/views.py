@@ -9,11 +9,12 @@ from itertools import groupby
 from collections import defaultdict
 from rest_framework.viewsets import ViewSet
 
-from .models import Match, Competition, Country, Team
+from .models import Match, Competition, Country, Team, Stadium
 from .serializers import (MatchSerializer,
                           CompetitionSerializer,
                           CountrySerializer,
-                          TeamSerializer)
+                          TeamSerializer,
+                          StadiumSerializer)
 
 
 # USER VIEWSETS
@@ -138,6 +139,12 @@ class LeagueViewSet(viewsets.ReadOnlyModelViewSet):
 class CountryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
+    permission_classes = [AllowAny]
+
+
+class StadiumViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Stadium.objects.all()
+    serializer_class = StadiumSerializer
     permission_classes = [AllowAny]
 
 

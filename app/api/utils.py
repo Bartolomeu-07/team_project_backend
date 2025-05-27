@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from django.db.models import Q
 
-from .models import Country, Competition, Match, Team
+from .models import Country, Competition, Match, Team, Stadium
 from .logistic_regression import calculate_probabilities
 
 API_KEY = '0707a7f0e4872c2bfc2763c2b27ba7b4'
@@ -64,7 +64,15 @@ def fetch_and_create_competitions():
         print("Error during fetching competitions:", response.status_code)
 
 
-def fetch_and_create_teams():
+
+def fetch_and_create_teams_and_venues():
+    """
+    The 'league' field is assigned based on the order in which the competitions are created.
+
+    The data should be retrieved in the following order:
+    1. National competitions
+    2. International competitions
+    """
     competitions_to_create = [135, 61, 78, 2, 140, 39]
 
     for competition_id in competitions_to_create:
@@ -75,6 +83,34 @@ def fetch_and_create_teams():
 
         response = requests.get(url + 'teams', headers=HEADERS, params=params)
         if response.status_code == 200:
+
+            # Creating stadiums
+            data = response.json().get('response', [])
+            existing_stadiums_ids = set(Stadium.objects.values_list('stadium_id', flat=True))
+            new_stadiums = []
+
+            for item in data:
+                stadium_data = item.get('venue', {})
+                stadium_id = stadium_data.get('id')
+                if stadium_data and stadium_id not in existing_stadiums_ids:
+                    new_stadiums.append(Stadium(
+                        stadium_id=stadium_id,
+                        name=stadium_data.get('name'),
+                        address = stadium_data.get('address'),
+                        city = stadium_data.get('city'),
+                        capacity = stadium_data.get('capacity'),
+                        surface = stadium_data.get('surface'),
+                        image = stadium_data.get('image')
+                    ))
+                existing_stadiums_ids.add(stadium_id)
+
+            if new_stadiums:
+                Stadium.objects.bulk_create(new_stadiums)
+                print(f"{len(new_stadiums)} new stadiums created.")
+            else:
+                print(f"No new stadiums to add.")
+
+            # Creating teams
             data = response.json().get('response', [])
             league = Competition.objects.get(competition_id=params.get('league'))
             countries = Country.objects.all()
@@ -82,23 +118,31 @@ def fetch_and_create_teams():
             new_teams = []
 
             for item in data:
+                stadium_id = item.get('venue').get('id')
                 team_data = item.get('team', {})
                 team_id = team_data.get('id')
 
                 if team_id and team_id not in existing_teams_ids:
                     code = team_data.get('code')
                     name = team_data.get('name')
+                    founded = team_data.get('founded')
                     country_name = team_data.get('country')
                     try:
                         country = countries.get(name=country_name)
                     except:
                         country = None
+                    try:
+                        stadium = Stadium.objects.get(stadium_id=stadium_id)
+                    except:
+                        stadium = None
                     logo = team_data.get('logo')
                     new_teams.append(Team(team_id=team_id,
                                                  code=code,
                                                  name=name,
                                                  league=league,
                                                  country=country,
+                                                 stadium=stadium,
+                                                 founded=founded,
                                                  logo=logo))
                     existing_teams_ids.add(team_id)
             if new_teams:
@@ -106,8 +150,9 @@ def fetch_and_create_teams():
                 print(f"{len(new_teams)} new teams created.")
             else:
                 print(f"No new teams to add.")
+
         else:
-            print("Error during fetching teams:", response.status_code)
+            print("Error during fetching teams and venues:", response.status_code)
 
 
 def create_or_update_match_data():
