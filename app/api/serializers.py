@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Match, Competition, Country, Team, Stadium
+from .models import Match, Competition, Country, Team, Stadium, MatchPrediction
+
 
 class CompetitionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -79,3 +80,14 @@ class StadiumSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stadium
         fields = '__all__'
+
+class MatchPredictionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MatchPrediction
+        fields = "__all__"
+
+    def validate(self, data):
+        match = data['match']
+        if not Match.objects.filter(pk=match.pk).exists():
+            raise serializers.ValidationError("Invalid match ID.")
+        return data
