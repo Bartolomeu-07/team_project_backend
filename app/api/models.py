@@ -1,3 +1,4 @@
+import jsonfield
 from django.db import models
 from django.utils.timezone import now
 
@@ -61,3 +62,20 @@ class Match(models.Model):
             models.Index(fields=['away_team', 'home_team']),
             models.Index(fields=['competition']),
         ]
+
+
+class MatchGrid(models.Model):
+    match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name='grid')
+
+    # Home team
+    home_team_colors = jsonfield.JSONField(default=dict, blank=True)
+    home_team_startXI = jsonfield.JSONField()
+    home_team_substitutes = jsonfield.JSONField()
+    home_team_coach_name = models.CharField(max_length=100)
+
+    # Away team
+    away_team_colors = jsonfield.JSONField(default=dict, blank=True)
+    away_team_startXI = jsonfield.JSONField()
+    away_team_substitutes = jsonfield.JSONField()
+    away_team_coach_name = models.CharField(max_length=100)
+

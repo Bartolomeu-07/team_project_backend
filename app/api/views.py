@@ -8,13 +8,14 @@ from drf_yasg import openapi
 from itertools import groupby
 from collections import defaultdict
 from rest_framework.viewsets import ViewSet
+import requests
 
-from .models import Match, Competition, Country, Team, Stadium
+from .models import Match, Competition, Country, Team, Stadium, MatchGrid
 from .serializers import (MatchSerializer,
                           CompetitionSerializer,
                           CountrySerializer,
                           TeamSerializer,
-                          StadiumSerializer)
+                          StadiumSerializer, MatchGridSerializer)
 
 
 # USER VIEWSETS
@@ -182,6 +183,103 @@ class SearchViewSet(ViewSet):
         serialized = TeamSerializer(teams, many=True)
 
         return Response(serialized.data)
+
+
+class MatchGridViewSet(viewsets.ViewSet):
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('id', openapi.IN_QUERY, description="Match ID",
+                              type=openapi.TYPE_INTEGER)])
+
+    def list(self, request, *args, **kwargs):
+        id = request.query_params.get('id')
+        match = Match.objects.get(match_id=id)
+
+        # If MatchGrid for provided ID exists, return serialized data
+        if MatchGrid.objects.filter(match=match).exists():
+            match_grid = MatchGrid.objects.get(match=match)
+            serialized = MatchGridSerializer(match_grid)
+            return Response(serialized.data)
+
+        # If MatchGrid doesn't exists, fetch data from external API and save into DB
+        API_KEY = '0707a7f0e4872c2bfc2763c2b27ba7b4'
+        HEADERS = {"x-apisports-key": API_KEY}
+        url = f"https://v3.football.api-sports.io/fixtures/lineups?fixture={id}"
+
+        response = requests.get(url, headers=HEADERS)
+
+        if response.status_code == 200:
+            data = response.json()
+            data = data['response']
+
+            # Home team
+            home_team_colors = data[0]['team'].get('colors', {})
+            home_team_startXI = data[0]['startXI']
+            home_team_startXI_transformed = [
+                {
+                    "name": p["player"]["name"],
+                    "number": p["player"]["number"],
+                    "grid": p["player"]["grid"]
+                }
+                for p in home_team_startXI
+            ]
+
+            home_team_substitutes = data[0]['substitutes']
+            home_team_substitutes_transformed = [
+                {"name": p["player"]["name"],
+                "number": p["player"]["number"]
+                }
+                for p in home_team_substitutes
+            ]
+
+            home_team_coach_name = data[0]['coach']['name']
+
+            # Away team
+            away_team_colors = data[1]['team'].get('colors', {})
+            away_team_startXI = data[1]['startXI']
+            away_team_startXI_transformed = [
+                {
+                    "name": p["player"]["name"],
+                    "number": p["player"]["number"],
+                    "grid": p["player"]["grid"]
+                }
+                for p in away_team_startXI
+            ]
+
+            away_team_substitutes = data[1]['substitutes']
+            away_team_substitutes_transformed = [
+                {"name": p["player"]["name"],
+                "number": p["player"]["number"]
+                }
+                for p in away_team_substitutes
+            ]
+
+            away_team_coach_name = data[1]['coach']['name']
+
+            # Creating object in database
+            match_grid = MatchGrid.objects.create(
+                match=match,
+                home_team_colors=home_team_colors,
+                home_team_startXI=home_team_startXI_transformed,
+                home_team_substitutes=home_team_substitutes_transformed,
+                home_team_coach_name=home_team_coach_name,
+                away_team_colors=away_team_colors,
+                away_team_startXI=away_team_startXI_transformed,
+                away_team_substitutes=away_team_substitutes_transformed,
+                away_team_coach_name=away_team_coach_name
+            )
+
+            # Return MatchGrid data
+            serialized = MatchGridSerializer(match_grid)
+            return Response(serialized.data)
+
+        else:
+            return Response({"error": "Failed to fetch data"}, status=response.status_code)
+
+
+
+
 
 # ADMIN VIEWSETS
 # class AdminMatchViewSet(viewsets.ModelViewSet):

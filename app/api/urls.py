@@ -7,7 +7,7 @@ from drf_yasg import openapi
 from .views import (MatchViewSet, LeagueViewSet,
                     CountryViewSet, TeamViewSet,
                     RecommendedViewSet, SearchViewSet,
-                    StadiumViewSet)
+                    StadiumViewSet, MatchGridViewSet)
 
 # API ROUTER
 api_router = DefaultRouter()
@@ -18,6 +18,7 @@ api_router.register(r'teams', TeamViewSet, basename='teams')
 api_router.register(r'stadiums', StadiumViewSet, basename='stadiums')
 api_router.register(r'recommended', RecommendedViewSet, basename='recommended matches')
 api_router.register(r'search', SearchViewSet, basename='search')
+api_router.register(r'match_grid', MatchGridViewSet, basename='match grid')
 
 # API schema configuration for Swagger
 schema_view = get_schema_view(

@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Match, Competition, Country, Team, Stadium
+from .models import Match, Competition, Country, Team, Stadium, MatchGrid
+
 
 class CompetitionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -78,4 +79,10 @@ class CountrySerializer(serializers.ModelSerializer):
 class StadiumSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stadium
+        fields = '__all__'
+
+
+class MatchGridSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MatchGrid
         fields = '__all__'
